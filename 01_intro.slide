@@ -1,0 +1,465 @@
+Getting started with Go
+Tremend Tech Talk
+09:00 13 Dec 2017
+
+Radu Ciurlea
+Web Platforms
+radu.ciurlea@tremend.com
+
+* Partea I – Intro
+
+Despre ce vorbim?
+
+- originile limbajului
+- sintaxă, exemple
+- concurență
+- Q & A, inclusiv pe parcurs
+
+* Despre Go
+
+* Go?
+
+"Go is an open source programming language that makes it easy to build simple, reliable, and efficient software."
+
+.link http://golang.org
+
+* Istoric
+
+Dezvoltarea a început la sfârșitul anului 2007.
+
+- Robert Griesemer, Rob Pike, și Ken Thompson.
+
+Proiectul a devenit open source din 2009 și are o comunitate foarte activă.
+
+Limbajul este stabil începând cu Go 1, de la începutul lui 2012.
+
+* De ce Go?
+
+Limbajul a fost dezvoltat pentru a rezolva problemele de scalabilitate întâlnite de Google.
+
+.image assets/datacenter.jpg 400 _
+
+* Scara sistemelor
+
+- 10⁶⁺ mașini
+- joburi care rulează zilnic pe mii de mașini
+- foarte multe acțiuni concomitente, coordonare între joburi etc
+
+Soluția a fost un limbaj cu suport foarte bun pentru concurență.
+
+.image assets/gophercomplex6.jpg
+
+* A doua problemă: amploarea proiectelor
+
+- un singur repo, folosit de 95% din developeri
+- 35.000.000 commituri, pe parcursul a 18 ani
+- 86 TB de date
+- 2 miliarde de linii de code in peste 9 milioane de fisiere
+- 50% din cod se schimba lunar
+
+.link https://cacm.acm.org/magazines/2016/7/204032-why-google-stores-billions-of-lines-of-code-in-a-single-repository/fulltext
+
+Soluția: limbajul a fost optimizat pentru codebase-uri mari
+
+* Cine folosește Go?
+
+În cadrul Google:
+
+- mii de programatori, milioane de linii de cod
+- dl.google.com, server de download pentru Chrome, Android, Earth etc
+- Vitess, load balancer pentru MySQL folosit de YouTube
+
+Mulți alți utilizatori:
+
+Apcera, Bitbucket, bitly, Canonical, CloudFlare, Core OS, Digital Ocean, Docker, Dropbox, Facebook, Getty Images, GitHub, Heroku, Iron.io, Kubernetes, Medium, MongoDB services, Mozilla services, New York Times, pool.ntp.org, SmugMug, SoundCloud, Stripe, Square, Thomson Reuters, Tumblr, Uber etc
+
+.link http://golang.org/wiki/GoUsers
+
+* Comparații cu alte limbaje
+
+* Fun vs fast
+
+.image assets/funfast-nogo.svg
+
+* Still fun, pretty fast
+
+.image assets/funfast.svg
+
+* Performanțe
+
+Destul de rapid față de limbajele de scripting. Am testat un endpoint care returneaza un obiect JSON simplu:
+
+  {
+    "message": "hello there!"
+  }
+
+- Python 3.5 (Flask/Gunicorn) ~ 15k req/s
+- Ruby 2.4 (Sinatra/Puma) ~ 27k req/s
+- Node 8 (express cluster) ~ 95k req/s
+- Go (standard lib http server) ~ 195k req/s
+
+(i5-8400, Ubuntu 16.04)
+
+* Seamănă cu C/C++ și Java
+
+aproximativ...
+
+- are acolade!
+- tipuri statice
+- OO, în felul lui
+- garbage collector
+- memory safe (se verifică referințele nule, validitatea indecșilor)
+- variabilele sunt mereu inițializate
+- metode
+- interfețe
+- type assertion (instanceof)
+- reflection
+
+* Alte avantaje
+
+- Programele se compilează în cod nativ mașinii pe care rulează. Nu există VM.
+- executabile statice (no libs). Deployment-uri triviale.
+- 1st class functions, lexical closures
+- suport built-in pentru stringuri utf-8
+- concurență integrată în limbaj
+- tipuri native pentru hash map, array dinamic
+- bibliotecă standard suficient de mare (batteries included)
+- tooling pentru testare, benchmarking și profiling built in
+
+* Lipsesc din limbaj
+
+- clase
+- constructori
+- mostenire
+- final
+- exceptii
+- template-uri / functii generice
+
+De ce? S-a pus accent pe claritate; ocazional asta poate însemna mai mult cod.
+
+- [[http://commandcenter.blogspot.com/2012/06/less-is-exponentially-more.html][Less is exponentially more (Pike, 2012)]]
+
+
+* Cum arată?
+
+* Hello World
+
+.play code/hello.go
+
+* Tipuri de date în Go
+
+- primitive
+
+	int, uint, int8, uint8, ...
+	bool, string
+	float32, float64
+	complex64, complex128
+
+- struct
+
+	struct {
+		Name string
+		Age  int
+	}
+
+- slice-uri și arrayuri
+
+	[]int, [3]string, []struct{ Name string }
+
+- map-uri
+
+	map[string]int
+
+* Alte tipuri
+
+- pointeri
+
+	*int, *Person
+
+- funcții
+
+	func(int, int) int
+
+- canale
+
+	chan bool
+
+- interfețe
+
+	interface {
+		Start()
+		Stop()
+	}
+
+* Declarații de tip
+
+	type [name] [specification]
+
+`Person` e un `struct`.
+
+	type Person struct {
+		name string
+		age  int
+	}
+
+`Celsius` este un `float64`.
+
+	type Celsius float64
+
+* Declararea funcțiilor
+
+	func [name] ([params]) [return value]
+	func [name] ([params]) ([return values])
+
+De exemplu:
+
+	func sum(a int, b int) int {
+		return a + b
+	}
+
+Cu mai multe valori returnate:
+
+	func divMod(a, b int) (int, int) {
+		return a / b, a % b
+	}
+
+Valorile returnate pot primi nume:
+
+	func divMod(den, div int) (quo, rem int) {
+		return den / div, den % div
+	}
+
+* Metode
+
+	func ([receiver]) [name] ([params]) ([return values])
+
+O metodă pe un struct:
+
+	func (p Person) IsMinor() bool {
+		return p.age < 18
+	}
+
+Dar pot fi folosite și pe alte tipuri, e.g. `float64`:
+
+	func (c Celsius) Freezing() bool {
+		return c <= 0
+	}
+
+_Totuși:_ metodele pot fi definite doar pe tipuri declarate în același package.
+
+	// Nu merge
+	func (s string) Length() int { return len(s) }
+
+* Declararea variabilelor
+
+Declarație "normală":
+
+    var text string = "asdf"
+
+Tipul poate fi omis (type inference):
+
+    var text = "hello"
+
+Doar în interiorul funcțiilor:
+
+    text := "hello"
+
+Alte declarații / inițializări
+
+    a := 0                             // int
+    b := true                          // boolean
+    f := 1.0                           // float64
+    p := Person{"Ion", "Iliescu"}      // Person (discutabil)
+
+* Nu se fac niciodată conversii numerice implicte
+
+Dacă am declarat:
+
+    type Celsius float64
+
+    type Fahrenheit float64
+
+Și avem variabilele:
+
+    var freezing Fahrenheit = 32
+    var boiling Celsius = 100
+
+Codul n-o să fie compilat:
+
+    sauna := (freezing + boiling) / 2
+
+
+* Pointeri
+
+Există...
+
+    var p *int
+    p = new(int)
+
+Dar nu putem face operații aritmetice cu ei (ca în C):
+
+    var p *int = &a[0]
+    var q = p+2            // invalid
+
+Există `new` dar nu și `delete`.
+
+Memoria este recuperată de garbage collector atunci când nu mai e accesibilă.
+
+* Moștenire vs compoziție
+
+- Moștenirea încalcă încapsularea
+
+- Dar compoziția duce la mult cod suplimentar pentru a accesa metode din obiectele folosite
+
+Exemplu:
+
+    type Engine struct{}
+
+    func (e Engine) Start() { ... }
+    func (e Engine) Stop()  { ... }
+
+Vrem  ca și `Car` să aibă metodele `Start` și `Stop`.
+
+* Soluția: struct embedding
+
+Compoziție + proxy automat al selectorilor
+
+.play code/embedding.go /type/,
+
+* Interfețe
+
+O interfață reprezintă o mulțime de metode.
+
+În Java (C++ nu are interfețe)
+
+    interface Switch {
+        void open();
+        void close();
+    }
+
+În Go:
+
+	type OpenCloser interface {
+		Open()
+		Close()
+	}
+
+* Satisfacerea cerințelor unei intefețe
+
+În Java interfețele sunt implementate *explicit*.
+
+În C++ clasele abstracte sunt extinse *explicit*.
+
+În Go interfețele sunt satisfăcute *implicit*.
+
+Exemplu din `fmt`
+
+  // Stringer is implemented by any value that has a String method,
+  // which defines the ``native'' format for that value.
+  // The String method is used to print values passed as an operand
+  // to any format that accepts a string or to an unformatted printer
+  // such as Print.
+  type Stringer interface {
+  	String() string
+  }
+
+
+* Exemple
+
+.link https://gobyexample.com
+
+* Concurență
+
+* Concurența
+
+Face parte din limbajul de bază, nu e o bibliotecă.
+
+Se bazează pe trei principii:
+
+- gorutine: threaduri light (kinda)
+- canale: au tip si sunt folosite pentru comunicatie si sincronizare intre gorutine
+- select: structură de control pentru coordonarea operațiilor concurente
+
+.image assets/funnelin.jpg 300 700
+
+* Sleep and talk
+
+.code code/conc1.go /sleepAndTalk/,/^}/
+
+Ne-am dori un mesaj pe secundă.
+
+.play code/conc1.go /func main/,/^}/
+
+Am putea să pornim toate funcțiile `sleepAndTalk` concurent?
+
+Da. Adăugăm `go` în fața apelului.
+
+* Tot sleep and talk, concurent
+
+.play code/conc2.go /func main/,/^}/
+
+* Sleep and talk & sleep some more
+
+.play code/conc3.go /func main/,/^}/
+
+Dar sincronizarea folosind `Sleep` e o idee proastă.
+
+* Comunicație prin canale
+
+`sleepAndTalk` va trimite stringul prin canal în loc să-l printeze.
+
+.code code/chan.go /sleepAndTalk/,/^}/
+
+Inițializăm canalul și îl pasăm către `sleepAndTalk`, apoi așteptăm să fie trimise valorile.
+
+.play code/chan.go /func main/,/^}/
+
+* Altceva: un server web
+
+Production ready, nu-i nevoie de vreun proxy in față.
+
+.play code/webserver.go
+
+* Să adăugăm un contor
+
+Dar nu prea merge corect...
+
+.play code/badcounter.go /nextID/,
+
+* Putem să numărăm corect
+
+Primim următorul id pe un canal.
+
+.code code/goodcounter.go /nextID/,/^}/
+
+E nevoie să trimitem id-urile prin canal.
+
+.code code/goodcounter.go /counter/,/^}/
+
+* Putem să numărăm corect
+
+Și ambele acțiuni trebuie executate concomitent.
+
+.play code/goodcounter.go /func main/,/^}/
+
+* More next time!
+
+* Referințe
+
+Video:
+
+.link https://www.youtube.com/watch?v=y2bLGIw4o7k Go For C++ Devs
+
+.link https://www.youtube.com/watch?v=_c_tQ6_3cCg Go for Java Programmers
+
+Reading:
+
+.link https://golang.org
+
+.link https://tour.golang.org
+
+.link https://talks.golang.org
+
+.link https://gobyexample.com
+
+.link https://commandcenter.blogspot.ro/2012/06/less-is-exponentially-more.html Less is exponentially more
