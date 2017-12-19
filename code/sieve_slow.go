@@ -1,6 +1,8 @@
 package main
 
-const n = 100000
+import "fmt"
+
+const n = 50000
 
 func main() {
 	primes := make([]int, 0)
@@ -15,5 +17,5 @@ OUTER:
 		primes = append(primes, i)
 		discovered++
 	}
-	// fmt.Println(primes)
+	fmt.Println(primes)
 }

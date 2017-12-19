@@ -2,6 +2,8 @@
 
 package main
 
+import "fmt"
+
 // Send the sequence 2, 3, 4, ... to channel 'ch'.
 func Generate(ch chan<- int) {
 	for i := 2; ; i++ {
@@ -25,12 +27,12 @@ func main() {
 	primes := make([]int, 0)
 	ch := make(chan int) // Create a new channel.
 	go Generate(ch)      // Launch Generate goroutine.
-	for i := 0; i < 100000; i++ {
+	for i := 0; i < 50000; i++ {
 		prime := <-ch
 		primes = append(primes, prime)
 		ch1 := make(chan int)
 		go Filter(ch, ch1, prime)
 		ch = ch1
 	}
-	// fmt.Println(primes)
+	fmt.Println(primes)
 }
